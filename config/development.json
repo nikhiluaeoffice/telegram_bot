@@ -1,0 +1,31 @@
+{
+  "port": 3002,
+  "hostAddress": "",
+  "databaseHost": "localhost",
+  "databasePort": "27017",
+  "databaseName": "mev",
+  "jwtsecret": "nodejwt",
+  "jwtresetsecret": "nodejwt",
+  "jwtOptions": {
+    "expiresIn": "24h"
+  },
+  "swaggerDefinition": {
+    "info": {
+      "title": "MEV",
+      "version": "2.0",
+      "description": "Telegram_bot API Docs"
+    },
+    "basePath": "/api/v1",
+    "securityDefinitions": {
+      "tokenauth": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+
+  "telegramConfig": {
+    "telegramBotKey": "7065134511:AAGY2sz4PmXp9toZ1emlCfZOp-OaUSI1fdc"
+  }
+}

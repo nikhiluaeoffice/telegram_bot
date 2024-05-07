@@ -1,0 +1,38 @@
+definitions:
+  securitySchemes:
+    tokenauth:
+      type: basic
+      description: bearer auth
+      name: Authorization
+      in: header
+    demouser:
+      type: basic
+
+
+  connectWallet:
+    required:
+      - walletAddress
+    properties:
+      walletAddress:
+        type: string
+
+  swap:
+    properties:
+      from:
+        type: object
+        properties:
+          address: 
+            type: string
+          symbol: 
+            type: string
+          amount: 
+            type: integer
+      to:
+        type: object
+        properties:
+          address: 
+            type: string
+          symbol: 
+            type: string
+          amount: 
+            type: integer
