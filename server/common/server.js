@@ -39,7 +39,7 @@ class ExpressServer {
       })
     );
 
-    app.use("/.netlify/functions/app", router);
+    // app.use("/.netlify/functions/app", );
   }
   router(routes) {
     routes(app);

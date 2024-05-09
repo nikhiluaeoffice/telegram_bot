@@ -3,7 +3,7 @@ const TelegramBot = require("node-telegram-bot-api");
 const telegramConfig = Config.get("telegramConfig");
 const bot = new TelegramBot(telegramConfig.telegramBotKey, { polling: true });
 const axios = require("axios");
-const contractAddress = Config.get("repoTokenAddress");
+// const contractAddress = Config.get("repoTokenAddress");
 import status from "../../../../enums/status";
 let isAlert = false;
 // require("./cron/notification");
@@ -20,44 +20,44 @@ const { createAttendance, attendanceList, updateAttendance } =
   attendanceServices;
 
 export class botController {
-  async balance(req, res, next) {
-    try {
-      console.log("========req.body========>>", req.body);
-      const walletAddress = req.body.address;
-      const chatId = req.body.chatId;
-      console.log("chat id===>>> ", chatId);
-      console.log("walletAddress===>>> ", walletAddress);
-      const abi = [
-        {
-          constant: true,
-          inputs: [{ name: "_owner", type: "address" }],
-          name: "balanceOf",
-          outputs: [{ name: "balance", type: "uint256" }],
-          type: "function",
-        },
-      ];
+  // async balance(req, res, next) {
+  //   try {
+  //     console.log("========req.body========>>", req.body);
+  //     const walletAddress = req.body.address;
+  //     const chatId = req.body.chatId;
+  //     console.log("chat id===>>> ", chatId);
+  //     console.log("walletAddress===>>> ", walletAddress);
+  //     const abi = [
+  //       {
+  //         constant: true,
+  //         inputs: [{ name: "_owner", type: "address" }],
+  //         name: "balanceOf",
+  //         outputs: [{ name: "balance", type: "uint256" }],
+  //         type: "function",
+  //       },
+  //     ];
 
-      const contract = new ethers.Contract(contractAddress, abi, provider);
-      const balance = await contract.balanceOf(walletAddress);
+  //     const contract = new ethers.Contract(contractAddress, abi, provider);
+  //     const balance = await contract.balanceOf(walletAddress);
 
-      const format = ethers.utils.formatUnits(balance, 18); // Assuming 18 decimals
-      console.log("balance123==>>>", format);
-      await connectWalletFunction(walletAddress, chatId, format);
-      console.log("balance fetch ====>", format);
-      isConnected = true;
+  //     const format = ethers.utils.formatUnits(balance, 18); // Assuming 18 decimals
+  //     console.log("balance123==>>>", format);
+  //     await connectWalletFunction(walletAddress, chatId, format);
+  //     console.log("balance fetch ====>", format);
+  //     isConnected = true;
 
-      // bot.sendMessage(chatId, `Balance: ${format}`);
-      bot.sendMessage(chatId, "Wallet Connected Successfully");
+  //     // bot.sendMessage(chatId, `Balance: ${format}`);
+  //     bot.sendMessage(chatId, "Wallet Connected Successfully");
 
-      return res
-        .status(200)
-        .json({ message: "Data received successfully", responseCode: 200 });
-    } catch (error) {
-      console.log("error===>>>", error);
-      bot.sendMessage(chatId, "Error fetching balance details:", error);
-      res.status(500).json({ error: "An error occurred while fetching data" });
-    }
-  }
+  //     return res
+  //       .status(200)
+  //       .json({ message: "Data received successfully", responseCode: 200 });
+  //   } catch (error) {
+  //     console.log("error===>>>", error);
+  //     bot.sendMessage(chatId, "Error fetching balance details:", error);
+  //     res.status(500).json({ error: "An error occurred while fetching data" });
+  //   }
+  // }
 }
 
 export default new botController();
@@ -276,69 +276,63 @@ bot.on("callback_query", async (query) => {
             const options = { weekday: "long" }; // Setting the option for long weekday name
             const dayName = punchOutTime.toLocaleDateString("en-US", options);
 
-            bot
-              .sendMessage(chatId, "⌨️ Please Enter your Employee ID:")
-              .then(() => {
-                const handleMessage = async (msg) => {
-                  try {
-                    const employeeID = msg.text.trim();
-                    const userData = await findUser({ employeeID });
-                    const attendanceData = await attendanceList({
-                      employeeID,
-                      loggedIn: true,
-                    }); // Ensure loggedIn is true
-                 console.log(">>>>>>>>>>", attendanceData);
-                    if (!userData) {
-                      bot.sendMessage(
-                        chatId,
-                        "❌ Oops, Please Register Yourself. ❌"
-                      );
-                    } else if (
-                      attendanceData &&
-                      attendanceData.employeeID === employeeID &&
-                      attendanceData.loggedIn
-                    ) {
-                      const punchInTime = new Date(attendanceData.punchIn); // Convert punchIn to Date object
-                      const diffMs =
-                        punchOutTime.getTime() - punchInTime.getTime();
-                      const diffHours = diffMs / (1000 * 60 * 60);
-                      console.log("Total hours worked:", diffHours);
+            bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:").then(() => {
+              const handleMessage = async (msg) => {
+                try {
+                  const employeeID = msg.text.trim();
+                  const userData = await findUser({ employeeID });
 
-                      const attendanceRecord = await updateAttendance(
-                        { _id: attendanceData._id },
-                        {
-                          punchOut: punchOutTime,
-                          date: new Date(),
-                          loggedIn: false,
-                          totalHrs: diffHours,
-                        }
-                      );
-                      console.log("Attendance recorded successfully.");
-                      bot.sendMessage(
-                        chatId,
-                        "✔️✔️ Attendance Punch Out Successfully. Thank you !! ✔️✔️"
-                      );
+                  // Retrieve attendance data where loggedIn is true
+                  const attendanceData = await attendanceList({ employeeID, loggedIn: true });
 
-                      // Remove the message event listener to prevent replication
-                      bot.removeListener("message", handleMessage);
-                    } else {
-                      bot.sendMessage(
-                        chatId,
-                        "Attendance already Punch Out by user"
-                      );
-                    }
-                  } catch (error) {
-                    console.error("Error processing attendance:", error);
+                  if (!userData) {
+                    bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
+                  } else if (
+                    attendanceData &&
+                    attendanceData.employeeID === employeeID &&
+                    attendanceData.loggedIn
+                  ) {
+                    const punchInTime = new Date(attendanceData.punchIn); // Convert punchIn to Date object
+                    const diffMs = punchOutTime.getTime() - punchInTime.getTime();
+                    const diffHours = diffMs / (1000 * 60 * 60);
+                    console.log("Total hours worked:", diffHours);
+
+                    const attendanceRecord = await updateAttendance(
+                      { _id: attendanceData._id },
+                      {
+                        punchOut: punchOutTime,
+                        date: new Date(),
+                        loggedIn: false,
+                        totalHrs: diffHours,
+                      }
+                    );
+                    console.log("Attendance recorded successfully.");
                     bot.sendMessage(
                       chatId,
-                      "There was an error processing your request."
+                      "✔️✔️ Attendance Punch Out Successfully. Thank you !! ✔️✔️"
+                    );
+
+                    // Remove the message event listener to prevent replication
+                    bot.removeListener("message", handleMessage);
+                  } else {
+                    bot.sendMessage(
+                      chatId,
+                      "Attendance already Punch Out by user"
                     );
                   }
-                };
+                } catch (error) {
+                  console.error("Error processing attendance:", error);
+                  bot.sendMessage(
+                    chatId,
+                    "There was an error processing your request."
+                  );
+                }
+              };
 
-                bot.once("message", handleMessage);
-              });
+              bot.once("message", handleMessage);
+            });
           }
+
         } catch (error) {
           console.error("Error in callback query handling:", error);
           bot.sendMessage(
@@ -347,6 +341,19 @@ bot.on("callback_query", async (query) => {
           );
         }
       });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      bot.sendMessage(
+        chatId,
+        "⚠️ <b>There was an error processing your request.</b>",
+        { parse_mode: "HTML" }
+      );
+    }
+  }
+
+  if (data === "break_records") {
+    try {
+
     } catch (error) {
       console.error("Error sending message:", error);
       bot.sendMessage(
@@ -476,7 +483,7 @@ Hello there! I am your Elite Telegram bot. Below are the options you can choose 
 Select an option from the menu below:
 `;
 
-// You can use this caption with your message
+  // You can use this caption with your message
 
   bot.sendPhoto(chatId, image, {
     caption: caption,
