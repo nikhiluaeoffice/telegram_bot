@@ -12,7 +12,6 @@ import { config } from "dotenv";
 const app = new express();
 var server = http.createServer(app);
 const root = path.normalize(`${__dirname}/../..`);
-const serverless = require("serverless-http");
 
 //***************************** Import Functions ************************/
 import bot from '../api/v1/controllers/bot/controller';
@@ -104,7 +103,6 @@ class ExpressServer {
 
 export default ExpressServer;
 
-module.exports.handler = serverless(app);
 
 function originIsAllowed(origin) {
   return true;
