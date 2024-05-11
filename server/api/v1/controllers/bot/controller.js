@@ -14,9 +14,9 @@ var activeListeners = {}; // Object to store active listeners by chatId
 import { userServices } from "../../services/user";
 const { createUser, findUser, updateUser } = userServices;
 import { helpServices } from "../../services/help";
-const { createHelp, findHelp, updateHelp } = helpServices;
+const { createHelp } = helpServices;
 import { attendanceServices } from "../../services/attendance";
-const { createAttendance, attendanceList, updateAttendance } =
+const { createAttendance, attendanceList, updateAttendance, attendanceListData } =
   attendanceServices;
 
 export class botController {
@@ -194,6 +194,7 @@ bot.on("callback_query", async (query) => {
     }
   }
 
+
   if (data === "attendance_logs") {
     try {
       const options = [
@@ -206,150 +207,91 @@ bot.on("callback_query", async (query) => {
       bot.sendMessage(chatId, "Click here to manage attendance logs.", {
         reply_markup: keyboard,
       });
-
+      
       bot.on("callback_query", async (query) => {
         try {
           if (query.data === "punch_In") {
-            // Punch In logic
             const punchInTime = new Date();
             const options = { weekday: "long" }; // Setting the option for long weekday name
             const dayName = punchInTime.toLocaleDateString("en-US", options);
-
-            const handlePunchIn = async (chatId, punchInTime) => {
-              bot
-                .sendMessage(chatId, "⌨️ Please Enter your Employee ID:")
-                .then(() => {
-                  bot.once("message", async (msg) => {
-                    try {
-                      const employeeID = msg.text.trim();
-                      const userData = await findUser({ employeeID });
-                      const attendanceData = await attendanceList({
-                        employeeID,
-                      });
-
-                      if (!userData) {
-                        bot.sendMessage(
-                          chatId,
-                          "❌ Oops, Please Register Yourself. ❌"
-                        );
-                      } else if (
-                        attendanceData &&
-                        attendanceData.employeeID === employeeID &&
-                        attendanceData.loggedIn
-                      ) {
-                        bot.sendMessage(
-                          chatId,
-                          "Attendance already Punch In by user"
-                        );
-                      } else {
-                        const attendanceRecord = await createAttendance({
-                          chatId: chatId,
-                          punchIn: punchInTime,
-                          date: new Date(),
-                          day: dayName,
-                          employeeID: employeeID,
-                          loggedIn: true,
-                        });
-                        console.log("Attendance recorded successfully.");
-                        bot.sendMessage(
-                          chatId,
-                          "✔️✔️ Attendance Punch In Successfully. Thank you !! ✔️✔️"
-                        );
-                      }
-                    } catch (error) {
-                      console.error("Error processing attendance:", error);
-                      bot.sendMessage(
-                        chatId,
-                        "There was an error processing your request."
-                      );
-                    }
-                  });
-                });
-            };
-
-            handlePunchIn(chatId, punchInTime);
-          }
-
-          if (query.data === "punch_out") {
-            // Punch Out logic
-            const punchOutTime = new Date();
-            const options = { weekday: "long" }; // Setting the option for long weekday name
-            const dayName = punchOutTime.toLocaleDateString("en-US", options);
-
             bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:").then(() => {
-              const handleMessage = async (msg) => {
+              bot.once("message", async (msg) => {
                 try {
                   const employeeID = msg.text.trim();
                   const userData = await findUser({ employeeID });
-
-                  // Retrieve attendance data where loggedIn is true
-                  const attendanceData = await attendanceList({ employeeID, loggedIn: true });
-
+                  const attendanceData = await attendanceListData({ employeeID });
+                  console.log(">>>>>>>", employeeID);
                   if (!userData) {
                     bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
-                  } else if (
-                    attendanceData &&
-                    attendanceData.employeeID === employeeID &&
-                    attendanceData.loggedIn
-                  ) {
-                    const punchInTime = new Date(attendanceData.punchIn); // Convert punchIn to Date object
-                    const diffMs = punchOutTime.getTime() - punchInTime.getTime();
-                    const diffHours = diffMs / (1000 * 60 * 60);
-                    console.log("Total hours worked:", diffHours);
-
-                    const attendanceRecord = await updateAttendance(
-                      { _id: attendanceData._id },
-                      {
-                        punchOut: punchOutTime,
-                        date: new Date(),
-                        loggedIn: false,
-                        totalHrs: diffHours,
-                      }
-                    );
-                    console.log("Attendance recorded successfully.");
-                    bot.sendMessage(
-                      chatId,
-                      "✔️✔️ Attendance Punch Out Successfully. Thank you !! ✔️✔️"
-                    );
-
-                    // Remove the message event listener to prevent replication
-                    bot.removeListener("message", handleMessage);
+                  } else if (attendanceData[0] && attendanceData[0].loggedIn == true) {
+                   console.log(">>>>>>>>>>>>22");
+                    bot.sendMessage(chatId, "Attendance already marked by user");
                   } else {
-                    bot.sendMessage(
-                      chatId,
-                      "Attendance already Punch Out by user"
-                    );
+                    const attendanceRecord = await createAttendance({
+                      chatId: chatId,
+                      punchIn: punchInTime,
+                      date: new Date(),
+                      day: dayName,
+                      employeeID: employeeID,
+                      loggedIn: true,
+                    });
+                    console.log("Attendance recorded successfully.");
+                    bot.sendMessage(chatId, "✔️✔️ Attendance Mark Successfully. Thank you !! ✔️✔️");
                   }
                 } catch (error) {
                   console.error("Error processing attendance:", error);
-                  bot.sendMessage(
-                    chatId,
-                    "There was an error processing your request."
-                  );
+                  bot.sendMessage(chatId, "There was an error processing your request.");
                 }
-              };
-
-              bot.once("message", handleMessage);
+              });
             });
           }
-
+          if (query.data === "punch_out") {
+            const punchOutTime = new Date();
+            const options = { weekday: "long" }; // Setting the option for long weekday name
+            const dayName = punchOutTime.toLocaleDateString("en-US", options);
+            bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:").then(() => {
+              bot.once("message", async (msg) => {
+                try {
+                  const employeeID = msg.text.trim();
+                  const userData = await findUser({ employeeID });
+                  const attendanceData = await attendanceListData({ employeeID });
+  
+                  if (!userData) {
+                    bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
+                  } else if (attendanceData[0] && attendanceData[0].loggedIn == true) {
+                    const attendanceRecord = await updateAttendance({ _id: attendanceData[0]._id},{
+                      chatId: chatId,
+                      punchOut: punchOutTime,
+                      date: new Date(),
+                      day: dayName,
+                      employeeID: employeeID,
+                      loggedIn: false
+                    });
+                    console.log("Attendance recorded successfully.");
+                    bot.sendMessage(chatId, "✔️✔️ Attendance Mark Successfully. Thank you !! ✔️✔️");
+                  } else {
+                    bot.sendMessage(chatId, "Attendance already marked by user");
+                  }
+                } catch (error) {
+                  console.error("Error processing attendance:", error);
+                  bot.sendMessage(chatId, "There was an error processing your request.");
+                }
+              });
+            });
+            // Handle punch out logic here if needed
+          }
         } catch (error) {
           console.error("Error in callback query handling:", error);
-          bot.sendMessage(
-            chatId,
-            "There was an error processing your request."
-          );
+          bot.sendMessage(chatId, "There was an error processing your request.");
         }
       });
     } catch (error) {
       console.error("Error sending message:", error);
-      bot.sendMessage(
-        chatId,
-        "⚠️ <b>There was an error processing your request.</b>",
-        { parse_mode: "HTML" }
-      );
+      bot.sendMessage(chatId, "⚠️ <b>There was an error processing your request.</b>", { parse_mode: "HTML" });
     }
   }
+  
+  
 
   if (data === "break_records") {
     try {
