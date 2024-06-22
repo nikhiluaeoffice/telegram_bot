@@ -272,7 +272,7 @@ bot.on("callback_query", async (query) => {
               
               if (!existingUser || existingUser === null) {
                 // Employee ID does not exist, inform user and exit
-                bot.sendMessage(chatId, "⭕ Employee ID not found. Registration canceled.");
+                await bot.sendMessage(chatId, "⭕ Employee ID not found. Registration canceled.");
                 return;
               }
               
@@ -316,7 +316,7 @@ bot.on("callback_query", async (query) => {
                   }
                 } catch (error) {
                   console.log(error);
-                  bot.sendMessage(
+                   bot.sendMessage(
                     chatId,
                     "⚠️ There was an error processing your request. ⚠️"
                   );
