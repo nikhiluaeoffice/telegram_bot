@@ -7,13 +7,16 @@ const options = {
   collection: "break",
   timestamps: true,
 };
-
 const breakModel = new Schema(
   {
     chatId: { type: String },
+    day: {type: String},
     breakIn: { type: String },
-    breakOut: { type: String },
-    totalBreakTime: { type: String },
+    breakOut: { type: String, default: 0 },
+    totalBreakTime: { type: String, default: 0 },
+    extraTime: {type: String},
+    isTimeExtended: {type: Boolean},
+    timeSaved: {type: String},
     employeeID: { type: String },
     onBreak: { type: Boolean, default: false },
     userType: { type: String, default: userType.USER },
@@ -23,4 +26,4 @@ const breakModel = new Schema(
 );
 breakModel.plugin(mongoosePaginate);
 breakModel.plugin(mongooseAggregatePaginate);
-module.exports = Mongoose.model("break", helpModel);
+module.exports = Mongoose.model("break", breakModel);

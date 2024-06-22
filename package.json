@@ -5,7 +5,7 @@
   "author": "Nikhil Chauhan",
   "license": "MIT",
   "scripts": {
-    "build": "netlify deploy --prod"
+    "start": "nodemon index.js"
   },
   "dependencies": {
     "@babel/register": "^7.22.15",

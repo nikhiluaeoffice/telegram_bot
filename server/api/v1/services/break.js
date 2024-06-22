@@ -1,29 +1,29 @@
-
 import breakModel from "../../../models/break";
 
 const breakServices = {
+  async createBreak(insertObj) {
+    return await breakModel.create(insertObj);
+  },
 
+  async findBreak(query) {
+    return await breakModel.findOne(query);
+  },
 
-    createBreak: async (insertObj) => {
-        return await breakModel.create(insertObj);
-    },
+  async updateBreak(query) {
+    return await breakModel.findOneAndUpdate({_id:query._id}, {$set:query}, { new: true });
+  },
 
-    findBreak: async (query) => {
-        return await breakModel.findOne(query);
-    },
+  updateBreaks: async (query, updateObj) => {
+    return await breakModel.findOneAndUpdate(query, updateObj, { new: true });
+},
 
-    updateBreak: async (query, updateObj) => {
-        return await breakModel.findOneAndUpdate(query, updateObj, { new: true });
-    },
+  async breakList(query) {
+    return await breakModel.find(query).sort({ createdAt: -1 });
+  },
 
-    breakList: async (query) => {
-        return await breakModel.find(query).select('address contractAddress').sort({ createdAt: -1 });
-    },
-    breakListData: async (query) => {
-        return await breakModel.find(query).sort({ createdAt: -1 });
-    }
+  async breakListData(query) {
+    return await breakModel.find(query).sort({ createdAt: -1 });
+  }
+};
 
-}
-
-module.exports = { breakServices };
-
+export { breakServices };

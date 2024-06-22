@@ -1,13 +1,12 @@
-import Express from "express";
-import controller from "./controller";
+import express from "express";
+import { AdminController } from "./controller";
 import auth from "../../../../helper/auth";
 
+const router = express.Router();
+const controller = new AdminController();
 
-export default Express.Router()
+// router.use(auth.verifyToken);
 
+router.post("/createEmployeeId", (req, res, next) => controller.createEmployeeId(req, res, next));
 
-    .use(auth.verifyToken)
-
-
-
-
+export default router;

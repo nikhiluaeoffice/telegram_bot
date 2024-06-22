@@ -3,7 +3,7 @@
   "hostAddress": "",
   "databaseHost": "localhost",
   "databasePort": "27017",
-  "databaseName": "mev",
+  "databaseName": "telegramBot",
   "jwtsecret": "nodejwt",
   "jwtresetsecret": "nodejwt",
   "jwtOptions": {
@@ -11,7 +11,7 @@
   },
   "swaggerDefinition": {
     "info": {
-      "title": "MEV",
+      "title": "telegramBot",
       "version": "2.0",
       "description": "Telegram_bot API Docs"
     },
@@ -26,6 +26,6 @@
   },
 
   "telegramConfig": {
-    "telegramBotKey": "7065134511:AAGY2sz4PmXp9toZ1emlCfZOp-OaUSI1fdc"
+    "telegramBotKey": "7331807832:AAElsmSnaQfIMSJOq4MnJVYqfzz6dG3zHd4"
   }
 }
