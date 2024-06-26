@@ -23,6 +23,7 @@ import { breakServices } from "../../services/break"; // Adjust import based on 
 
 
 export class botController {}
+  
   async function handlePunchIn(chatId, shiftType) {
     try {
       const punchInTime = new Date();
@@ -38,23 +39,55 @@ export class botController {}
           if (!userData) {
             bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
             return;
-          } else if (attendanceData[0] && attendanceData[0].loggedIn) {
-            bot.sendMessage(chatId, "Attendance already marked by user");
-            return;
           }
+          // Check if there is an active attendance entry
+          if (attendanceData[0] && attendanceData[0].loggedIn) {
+            // Check if the previous punch-in was within the last 23 hours
+            const lastPunchInTime = new Date(attendanceData[0].punchIn);
+            const hoursDiff = (punchInTime.getTime() - lastPunchInTime.getTime()) / (1000 * 60 * 60);
   
-          await createAttendance({
-            chatId: chatId,
-            punchIn: punchInTime,
-            date: new Date(),
-            day: dayName,
-            employeeID: employeeID,
-            loggedIn: true,
-            totalHrs: punchInTime.getTime() // Assuming totalHrs initialization
-          });
+            if (hoursDiff <= 23) {
+              // Update the existing attendance with the new punch-in time
+              await updateAttendance({ _id: attendanceData[0]._id }, {
+                punchIn: punchInTime,
+                loggedIn: true,
+                halfDay: false // Reset half-day flag if updating
+              });
   
-          console.log("Attendance recorded successfully.");
-          bot.sendMessage(chatId, "✔️✔️ Attendance Punch In Successfully. Thank you !! ✔️✔️");
+              console.log("Attendance updated successfully.");
+              bot.sendMessage(chatId, "✔️✔️ Attendance Updated Successfully. Thank you !! ✔️✔️");
+            } else {
+              // Create new attendance as it's been more than 23 hours since last punch-in
+              await createAttendance({
+                chatId: chatId,
+                punchIn: punchInTime,
+                date: new Date(),
+                day: dayName,
+                employeeID: employeeID,
+                loggedIn: true,
+                totalHrs: punchInTime.getTime(), // Assuming totalHrs initialization
+                isHalfDay: punchInTime.getHours() > 9 || (punchInTime.getHours() === 9 && punchInTime.getMinutes() > 15)
+              });
+  
+              console.log("Attendance recorded successfully.");
+              bot.sendMessage(chatId, "✔️✔️ Attendance Punch In Successfully. Thank you !! ✔️✔️");
+            }
+          } else {
+            // No active attendance found, create new attendance
+            await createAttendance({
+              chatId: chatId,
+              punchIn: punchInTime,
+              date: new Date(),
+              day: dayName,
+              employeeID: employeeID,
+              loggedIn: true,
+              totalHrs: punchInTime.getTime(), // Assuming totalHrs initialization
+              isHalfDay: punchInTime.getHours() > 9 || (punchInTime.getHours() === 9 && punchInTime.getMinutes() > 15)
+            });
+  
+            console.log("Attendance recorded successfully.");
+            bot.sendMessage(chatId, "✔️✔️ Attendance Punch In Successfully. Thank you !! ✔️✔️");
+          }
         } catch (error) {
           console.error("Error processing attendance:", error);
           bot.sendMessage(chatId, "There was an error processing your request.");
@@ -65,6 +98,7 @@ export class botController {}
       bot.sendMessage(chatId, "There was an error processing punch in action.");
     }
   }
+  
   
   async function handlePunchOut(chatId, shiftType) {
     try {
@@ -77,11 +111,11 @@ export class botController {}
           const employeeID = msg.text.trim();
           const userData = await findUser({ employeeID });
           const attendanceData = await attendanceListData({ employeeID });
-  
           if (!userData) {
             bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
             return;
-          } else if (attendanceData[0] && attendanceData[0].loggedIn) {
+          }
+          else if (attendanceData[0] && attendanceData[0].loggedIn) {
             const timeDuration = shiftType === "full" ? 9 * 60 * 60 * 1000 : 4.5 * 60 * 60 * 1000; // Calculate time duration based on shift type
             if (punchOutTime.getTime() <= attendanceData[0].totalHrs + timeDuration) {
               const remainingTime = Math.ceil((attendanceData[0].totalHrs + timeDuration - punchOutTime.getTime()) / 60000);

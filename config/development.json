@@ -1,14 +1,15 @@
 {
   "port": 3002,
   "hostAddress": "",
-  "databaseHost": "localhost",
-  "databasePort": "27017",
+  "databaseHost": "cluster0.uwbn8vt.mongodb.net",
+  "databasePort": "",
   "databaseName": "telegramBot",
   "jwtsecret": "nodejwt",
   "jwtresetsecret": "nodejwt",
   "jwtOptions": {
     "expiresIn": "24h"
   },
+"mongoURI": "mongodb+srv://Nikhil05711:Nikhil%40123@cluster0.uwbn8vt.mongodb.net/telegramBot",
   "swaggerDefinition": {
     "info": {
       "title": "telegramBot",
@@ -24,8 +25,9 @@
       }
     }
   },
-
   "telegramConfig": {
     "telegramBotKey": "7331807832:AAElsmSnaQfIMSJOq4MnJVYqfzz6dG3zHd4"
   }
 }
+
+
