@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { employeeIdServices } from "../../services/employeeId"; // Adjust import based on your structure
-
+import { userServices } from "../../services/user";
 
 export class AdminController {
   /**
@@ -138,4 +138,38 @@ export class AdminController {
       return res.status(500).json({ error: "Internal server error" });
     }
   }
+
+  async getEmployeeId(req, res, next) {
+    try {
+       
+      if (!isAdminUser) {
+        return res.status(403).json({ error: "Unauthorized access" });
+      }
+  
+      const { email } = req.query;
+  
+      // Validate required parameters
+      if (!email) {
+        return res.status(400).json({ error: "Required query parameter 'email' is missing or invalid" });
+      }
+  
+      // Check if employee with email exists and is active
+      const existingUser = await employeeIdServices.findEmployeeId({
+        email: email,
+        status: "ACTIVE"
+      });
+  
+      if (!existingUser) {
+        return res.status(404).json({ message: "No employee registered with this email address." });
+      }
+  
+      return res.status(200).json({ message: "User fetched successfully.", data: existingUser });
+  
+    } catch (error) {
+      console.error("Error fetching employee:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+  
+  
 }

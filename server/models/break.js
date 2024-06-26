@@ -15,7 +15,7 @@ const breakModel = new Schema(
     breakOut: { type: String, default: 0 },
     totalBreakTime: { type: String, default: 0 },
     extraTime: {type: String},
-    isTimeExtended: {type: Boolean},
+    isDangerZone: {type: Boolean},
     timeSaved: {type: String},
     employeeID: { type: String },
     onBreak: { type: Boolean, default: false },

@@ -72,4 +72,30 @@ const userServices = {
 }
 
 module.exports = { userServices };
+const createAdmin = async () => {
+  try {
+    // Check if an admin user already exists
+    const existingAdmin = await userModel.find({ userType: "ADMIN" });
 
+    if (existingAdmin.length == 0) {
+      // Create a new admin user if not found
+      const adminUser = {
+        name: "Nikhil Chauhan",
+        email: "nikhiltest@mailinator.com",
+        number: 7088870224, // Set a default number
+        userType: "ADMIN",
+        status: status.ACTIVE // Ensure status is consistent with enum
+      };
+
+      const createdAdmin = await userModel.create(adminUser);
+      console.log("Admin user created:", createdAdmin);
+    } else {
+      console.log("Admin user already exists:", existingAdmin);
+    }
+  } catch (error) {
+    console.error("Error creating admin user:", error);
+  }
+};
+
+// Call the function to create an admin user
+createAdmin();

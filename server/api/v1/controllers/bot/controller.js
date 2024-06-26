@@ -214,7 +214,7 @@ export class botController {}
           breakOut: breakOutTime,
           totalBreakTime: (parseFloat(breakData[0].totalBreakTime) + (timeDurationSeconds / 60)).toFixed(3),
           onBreak: false,
-          isTimeExtended: timeDurationSeconds > (45 * 60), // Check if time extension is needed
+          isDangerZone: timeDurationSeconds > (45 * 60), // Check if time extension is needed
           extraTime: timeDurationSeconds > (45 * 60) ? (timeDurationSeconds - (45 * 60)) / 60 : 0, // Convert extra time to minutes
         });
 
