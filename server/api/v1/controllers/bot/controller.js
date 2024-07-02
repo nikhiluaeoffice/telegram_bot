@@ -546,11 +546,11 @@ function startToast(chatId) {
     inline_keyboard: options,
   };
 
-  const image = "https://ibb.co/dMb2xZY"; // Replace with the URL of your image
+  const image = "https://ibb.co/41hKCFZ"; // Replace with the URL of your image
   const caption = `
-🌎📣 <b>Welcome to OneFX Telegram Bot</b> 🌎📣
+🌎📣 <b>Welcome to AttendNRest Bot</b> 🌎📣
 
-Hello there! I am your Elite Telegram bot. Below are the options you can choose from:
+Hello there! I am your AttendNRest Telegram bot. Below are the options you can choose from:
 
 ➡️ Register: Start your journey by registering.
 ➡️ Attendance: Check your attendance records.
