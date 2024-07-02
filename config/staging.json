@@ -1,0 +1,34 @@
+{
+    "port": 3002,
+    "hostAddress": "",
+    "databaseHost": "cluster0.uwbn8vt.mongodb.net",
+    "databasePort": "",
+    "databaseName": "telegramBot",
+    "jwtsecret": "nodejwt",
+    "jwtresetsecret": "nodejwt",
+    "jwtOptions": {
+      "expiresIn": "24h"
+    },
+  "mongoURI": "mongodb+srv://Nikhil05711:Nikhil%40123@cluster0.uwbn8vt.mongodb.net/telegramBot",
+    "swaggerDefinition": {
+      "info": {
+        "title": "telegramBot",
+        "version": "2.0",
+        "description": "Telegram_bot API Docs"
+      },
+      "basePath": "/api/v1",
+      "securityDefinitions": {
+        "tokenauth": {
+          "type": "apiKey",
+          "name": "Authorization",
+          "in": "header"
+        }
+      }
+    },
+    "telegramConfig": {
+      "telegramBotKey": "7331807832:AAElsmSnaQfIMSJOq4MnJVYqfzz6dG3zHd4"
+    }
+  }
+  
+  
+  
