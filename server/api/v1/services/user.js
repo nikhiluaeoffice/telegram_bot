@@ -84,13 +84,14 @@ const createAdmin = async () => {
         email: "nikhiltest@mailinator.com",
         number: 7088870224, // Set a default number
         userType: "ADMIN",
+        chatId: "0000",
         status: status.ACTIVE // Ensure status is consistent with enum
       };
 
       const createdAdmin = await userModel.create(adminUser);
       console.log("Admin user created:", createdAdmin);
     } else {
-      console.log("Admin user already exists:", existingAdmin);
+      console.log("Admin user already exists:");
     }
   } catch (error) {
     console.error("Error creating admin user:", error);

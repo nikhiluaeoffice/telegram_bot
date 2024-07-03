@@ -4,12 +4,13 @@
   "databaseHost": "cluster0.uwbn8vt.mongodb.net",
   "databasePort": "",
   "databaseName": "telegramBot",
-  "jwtsecret": "nodejwt",
-  "jwtresetsecret": "nodejwt",
+  "jwtsecret": "secretkey",
+  "jwtresetsecret": "secretkey",
   "jwtOptions": {
     "expiresIn": "24h"
   },
 "mongoURI": "mongodb+srv://Nikhil05711:Nikhil%40123@cluster0.uwbn8vt.mongodb.net/telegramBot",
+
   "swaggerDefinition": {
     "info": {
       "title": "telegramBot",

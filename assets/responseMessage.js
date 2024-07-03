@@ -27,4 +27,5 @@ module.exports = {
 	DELETE_SUCCESS: 'Successfully deleted',
 	DATA_EXIST: 'This data already exists',
 	HASH_ALREADY_EXIST:"Transaction hash already exist.",
+	TOKEN_EXPIRED: "Token Expired, Please Login Again"
 };

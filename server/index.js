@@ -22,6 +22,7 @@ import Server from "./common/server";
 
 const mongoURI = Config.get("mongoURI");
 
+
 // Connect to MongoDB using mongoose
 mongoose.connect(mongoURI, {
   useNewUrlParser: true,

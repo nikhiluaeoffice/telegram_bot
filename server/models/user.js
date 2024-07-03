@@ -12,11 +12,13 @@ const userModel = new Schema(
   {
     chatId: { type: String },
     name: { type: String },
+    email: {type: String},
     employeeID: { type: String },
     isLoggedIn: { type: Boolean, default: false },
     isOnBreak: { type: Boolean, default: false },
     userType: { type: String, default: userType.USER },
     status: { type: String, default: status.ACTIVE },
+    password: {type: String}
   },
   options
 );

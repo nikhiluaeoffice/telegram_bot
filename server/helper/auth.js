@@ -7,39 +7,44 @@ import responseMessage from '../../assets/responseMessage';
 module.exports = {
 
   verifyToken(req, res, next) {
-    if (req.headers.token) {
-      jwt.verify(req.headers.token, config.get('jwtsecret'), (err, result) => {
+    try {
+      const authorizationHeader = req.headers['authorization'];
+      console.log(">>>>>>>>", authorizationHeader);
+      if(!authorizationHeader){
+        throw apiError.unauthorized(responseMessage.TOKEN_EXPIRED)
+      }
+      if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+        throw apiError.unauthorized(responseMessage.NO_TOKEN);
+      }
+      
+      const token = authorizationHeader.split(' ')[1];
+
+      jwt.verify(token, config.get('jwtsecret'), (err, decoded) => {
         if (err) {
           throw apiError.unauthorized();
         }
-        else {
-          userModel.findOne({ _id: result.id }, (error, result2) => {
-            if (error) {
-              return next(error)
-            }
-            else if (!result2) {
-              throw apiError.notFound(responseMessage.USER_NOT_FOUND);
-            }
-            else {
-              if (result2.status == "BLOCK") {
-                throw apiError.forbidden(responseMessage.BLOCK_BY_ADMIN);
-              }
-              else if (result2.status == "DELETE") {
-                throw apiError.unauthorized(responseMessage.DELETE_BY_ADMIN);
-              }
-              else {
-                req.userId = result.id;
-                req.userDetails = result
-                next();
-              }
-            }
-          })
-        }
-      })
-    } else {
-      throw apiError.badRequest(responseMessage.NO_TOKEN);
+
+        userModel.findOne({ _id: decoded.userId }, (error, user) => {
+          if (error) {
+            return next(error);
+          } else if (!user) {
+            throw apiError.notFound(responseMessage.USER_NOT_FOUND);
+          } else if (user.status === "BLOCK") {
+            throw apiError.forbidden(responseMessage.BLOCK_BY_ADMIN);
+          } else if (user.status === "DELETE") {
+            throw apiError.unauthorized(responseMessage.DELETE_BY_ADMIN);
+          }
+
+          req.userId = decoded.userId;
+          req.userDetails = decoded;
+          next();
+        });
+      });
+    } catch (error) {
+      return next(error);
     }
   },
+
 
   verifyTokenBySocket: (token) => {
     return new Promise((resolve, reject) => {
