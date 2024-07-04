@@ -40,13 +40,12 @@ export class botController {}
             bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
             return;
           }
-          // Check if there is an active attendance entry
           if (attendanceData[0] && attendanceData[0].loggedIn) {
             // Check if the previous punch-in was within the last 23 hours
             const lastPunchInTime = new Date(attendanceData[0].punchIn);
             const hoursDiff = (punchInTime.getTime() - lastPunchInTime.getTime()) / (1000 * 60 * 60);
   
-            if (hoursDiff <= 23) {
+            if (hoursDiff <= 10) {
               // Update the existing attendance with the new punch-in time
               await updateAttendance({ _id: attendanceData[0]._id }, {
                 punchIn: punchInTime,
@@ -158,7 +157,7 @@ export class botController {}
         try {
           const employeeID = msg.text.trim();
           const userData = await findUser({ employeeID });
-          let breakData = await breakServices.breakList({ employeeID, date: { $gte: new Date().setHours(0, 0, 0, 0) } });
+          let breakData = await breakServices.breakList({ employeeID, createdAt: { $gte: new Date().setHours(0, 0, 0, 0) } });
   
           if (!userData) {
             bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
@@ -205,8 +204,6 @@ export class botController {}
   
   async function handleBreakOut(chatId) {
     const breakOutTime = new Date().getTime();
-  
-    // Prompt user for Employee ID
     bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:");
   
     // Listen for user's response
@@ -224,7 +221,7 @@ export class botController {}
         // Find the latest break data for the user on the same date
         let breakData = await breakServices.breakList({
           employeeID,
-          date: {
+          createdAt: {
             $gte: new Date().setHours(0, 0, 0, 0), // Start of today
             $lt: new Date().setHours(23, 59, 59, 999), // End of today
           },
@@ -331,8 +328,7 @@ bot.on("callback_query", async (query) => {
                   }
               
                   // Check if user is already registered
-                  const userData = await findUser({ chatId: chatId });
-                  
+                  const userData = await findUser({ chatId: chatId});
                   if (!userData) {
                     // Create a new user document
                     const newUser = await createUser({
