@@ -13,5 +13,5 @@ router.get("/getEmployeeId", (req, res, next) => controller.getEmployeeId(req, r
 router.put("/updateEmployeeId", (req, res, next) => controller.updateEmployeeId(req, res, next));
 router.get("/getAllEmployeeID", (req, res, next) => controller.getAllEmployeeID(req, res, next));
 router.get("/getAllBreakData", (req, res, next) => controller.getAllBreakData(req, res, next));
-// router.get("/getAllAttendaceData", (req, res, next) => controller.getAllAttendaceData(req, res, next));
+router.get("/getAllHelpQueries", (req, res, next) => controller.getAllHelpQueries(req, res, next));
 export default router;

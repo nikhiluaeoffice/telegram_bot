@@ -643,8 +643,80 @@ export class AdminController {
     }
   }
 
+  /**
+ * @swagger
+ * /admin/getAllHelpQueries:
+ *   get:
+ *     tags:
+ *       - ADMIN
+ *     summary: Get all help records
+ *     description: Retrieve all help records.
+ *     security:
+ *       - tokenauth: []
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: Successful retrieval of help records
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         description: Help record ID
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                         description: Date of help
+ *                       employeeId:
+ *                         type: string
+ *                         description: Employee ID associated with the help record
+ *       404:
+ *         description: No help records found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ */
 
+  async getAllHelpQueries(req, res, next) {
+    try {
+      const data = await helpServices.listHelp();
 
+      if (!data || data.length === 0) {
+        return res.status(404).json({ message: "No help records found." });
+      }
 
+      return res.status(200).json({ message: "Help records fetched successfully.", data });
+
+    } catch (error) {
+      console.error("Error fetching all Help records:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
 
 }

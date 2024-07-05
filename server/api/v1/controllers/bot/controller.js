@@ -236,17 +236,21 @@ export class botController {}
         // Calculate break duration in seconds
         const breakInTime = breakData[0].breakIn;
         const timeDurationSeconds = Math.floor((breakOutTime - breakInTime) / 1000);
-  
+        let totalTimeAcquired = (parseFloat(breakData[0].totalBreakTime) + (timeDurationSeconds / 60)).toFixed(3);
+        let extraTimeAcquire = 0; // Changed to number instead of string
+        if (parseFloat(totalTimeAcquired) > 45) { // Converted to parseFloat for comparison
+           extraTimeAcquire = parseFloat(totalTimeAcquired) - 45; // Converted to parseFloat for subtraction
+        }               
         // Update existing break record
         await breakServices.updateBreaks({
           _id: breakData[0]._id,
         }, {
           chatId: chatId,
           breakOut: breakOutTime,
-          totalBreakTime: (parseFloat(breakData[0].totalBreakTime) + (timeDurationSeconds / 60)).toFixed(3),
+          totalBreakTime: totalTimeAcquired,
           onBreak: false,
           isDangerZone: timeDurationSeconds > (45 * 60), // Check if time extension is needed
-          extraTime: timeDurationSeconds > (45 * 60) ? (timeDurationSeconds - (45 * 60)) / 60 : 0, // Convert extra time to minutes
+          extraTime: extraTimeAcquire // Convert extra time to minutes
         });
 
         const updatedBreakData = await breakServices.findBreak({ _id: breakData[0]._id });
