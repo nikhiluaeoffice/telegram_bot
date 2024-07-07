@@ -14,4 +14,6 @@ router.put("/updateEmployeeId", (req, res, next) => controller.updateEmployeeId(
 router.get("/getAllEmployeeID", (req, res, next) => controller.getAllEmployeeID(req, res, next));
 router.get("/getAllBreakData", (req, res, next) => controller.getAllBreakData(req, res, next));
 router.get("/getAllHelpQueries", (req, res, next) => controller.getAllHelpQueries(req, res, next));
+router.delete("/deleteUser", (req, res, next) => controller.deleteUser(req, res, next));
+
 export default router;

@@ -169,24 +169,31 @@ export class AdminController {
 
   async getEmployeeId(req, res, next) {
     try {
-      const { email } = req.body;
-      email = email.toLowerCase();
+      let { email } = req.query;
+      
       if (!email) {
         return res.status(400).json({ error: "Required query parameter 'email' is missing or invalid" });
       }
+      
+      email == email.toLowerCase();
+      
       const existingUser = await employeeIdServices.findEmployeeId({
         email: email,
         status: "ACTIVE"
       });
+      
+      console.log(">>>>>>>>", existingUser);
       if (!existingUser) {
         return res.status(404).json({ message: "No employee registered with this email address." });
       }
+      
       return res.status(200).json({ message: "User fetched successfully.", data: existingUser });
     } catch (error) {
       console.error("Error fetching employee:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   }
+  
 
   /**
  * @swagger
@@ -252,7 +259,7 @@ export class AdminController {
   async updateEmployeeId(req, res, next) {
     try {
       const { email, name, employeeId } = req.body;
-      email = email.toLowerCase();
+      email == email.toLowerCase();
       
       if (!email) {
         return res.status(400).json({ error: "Required query parameter 'email' is missing or invalid" });
@@ -606,7 +613,6 @@ export class AdminController {
    *               type: string
    */
 
-
   async signup(req, res, next) {
     try {
       let { name, email, chatId, password } = req.body;
@@ -715,6 +721,78 @@ export class AdminController {
 
     } catch (error) {
       console.error("Error fetching all Help records:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  /**
+   * @swagger
+   * /admin/deleteUser:
+   *   delete:
+   *     tags:
+   *       - ADMIN
+   *     summary: Delete User
+   *     description: Delet User from Here with specified details.
+   *     produces:
+   *       - application/json
+   *     parameters:
+   *       - name: chatId
+   *         description: chatId of the employee
+   *         in: formData
+   *         required: true
+   *       - name: employeeID
+   *         description: employeeID of the employee
+   *         in: formData
+   *         required: true
+   *     responses:
+   *       200:
+   *         description: Success message and delete employee data
+   *         schema:
+   *           type: object
+   *           properties:
+   *             message:
+   *               type: string
+   *             data:
+   *               type: object
+   *       400:
+   *         description: Bad request, required parameters are missing or invalid
+   *         schema:
+   *           type: object
+   *           properties:
+   *             error:
+   *               type: string
+   *       401:
+   *         description: User with the provided email already exists
+   *         schema:
+   *           type: object
+   *           properties:
+   *             message:
+   *               type: string
+   *       500:
+   *         description: Internal server error
+   *         schema:
+   *           type: object
+   *           properties:
+   *             error:
+   *               type: string
+   */
+
+  async deleteUser(req, res, next) {
+    try {
+      const {chatId, employeeID} = req.body;
+      if(!req.body){
+        return res.status(403).json({ message: "No Parameter found." });
+      }
+      const data = await userServices.findUser(req.body.chatId, req.body.employeeId);
+
+      if (!data || data.length === 0) {
+        return res.status(404).json({ message: "No User records found." });
+      }
+
+      return res.status(200).json({ message: "User record delete successfully.", data });
+
+    } catch (error) {
+      console.error("Error deleting User records:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   }
