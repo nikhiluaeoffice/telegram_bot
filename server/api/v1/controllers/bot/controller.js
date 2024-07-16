@@ -8,262 +8,261 @@ import status from "../../../../enums/status";
 let isAlert = false;
 // require("./cron/notification");
 
-var activeListeners = {}; // Object to store active listeners by chatId
+var activeListeners = {};
 //****************************** Import services here ******************************************/
 
 import { userServices } from "../../services/user";
-const { createUser, findUser, updateUser } = userServices;
+const { createUser, findUser } = userServices;
 import { helpServices } from "../../services/help";
 const { createHelp } = helpServices;
 import { attendanceServices } from "../../services/attendance";
 const { createAttendance, updateAttendance, attendanceListData } =
   attendanceServices;
-import { employeeIdServices } from "../../services/employeeId"; // Adjust import based on your structure
-import { breakServices } from "../../services/break"; // Adjust import based on your structure
+import { employeeIdServices } from "../../services/employeeId";
+import { breakServices } from "../../services/break";
 
 
-export class botController {}
-  
-  async function handlePunchIn(chatId, shiftType) {
-    try {
-      const punchInTime = new Date();
-      const dayName = punchInTime.toLocaleDateString("en-US", { weekday: "long" });
-  
-      bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:");
-      bot.once("message", async (msg) => {
-        try {
-          const employeeID = msg.text.trim();
-          const userData = await findUser({ employeeID });
-          const attendanceData = await attendanceListData({ employeeID });
-  
-          if (!userData) {
-            bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
-            return;
-          }
-          if (attendanceData[0] && attendanceData[0].loggedIn) {
-            // Check if the previous punch-in was within the last 23 hours
-            const lastPunchInTime = new Date(attendanceData[0].punchIn);
-            const hoursDiff = (punchInTime.getTime() - lastPunchInTime.getTime()) / (1000 * 60 * 60);
-  
-            if (hoursDiff <= 10) {
-              // Update the existing attendance with the new punch-in time
-              await updateAttendance({ _id: attendanceData[0]._id }, {
-                punchIn: punchInTime,
-                loggedIn: true,
-                halfDay: false // Reset half-day flag if updating
-              });
-  
-              console.log("Attendance updated successfully.");
-              bot.sendMessage(chatId, "✔️✔️ Attendance Updated Successfully. Thank you !! ✔️✔️");
-            } else {
-              // Create new attendance as it's been more than 23 hours since last punch-in
-              await createAttendance({
-                chatId: chatId,
-                punchIn: punchInTime,
-                date: new Date(),
-                day: dayName,
-                employeeID: employeeID,
-                loggedIn: true,
-                totalHrs: punchInTime.getTime(), // Assuming totalHrs initialization
-                isHalfDay: punchInTime.getHours() > 9 || (punchInTime.getHours() === 9 && punchInTime.getMinutes() > 15)
-              });
-  
-              console.log("Attendance recorded successfully.");
-              bot.sendMessage(chatId, "✔️✔️ Attendance Punch In Successfully. Thank you !! ✔️✔️");
-            }
-          } else {
-            // No active attendance found, create new attendance
-            await createAttendance({
-              chatId: chatId,
-              punchIn: punchInTime,
-              date: new Date(),
-              day: dayName,
-              employeeID: employeeID,
-              loggedIn: true,
-              totalHrs: punchInTime.getTime(), // Assuming totalHrs initialization
-              isHalfDay: punchInTime.getHours() > 9 || (punchInTime.getHours() === 9 && punchInTime.getMinutes() > 15)
-            });
-  
-            console.log("Attendance recorded successfully.");
-            bot.sendMessage(chatId, "✔️✔️ Attendance Punch In Successfully. Thank you !! ✔️✔️");
-          }
-        } catch (error) {
-          console.error("Error processing attendance:", error);
-          bot.sendMessage(chatId, "There was an error processing your request.");
-        }
-      });
-    } catch (error) {
-      console.error("Error handling punch in:", error);
-      bot.sendMessage(chatId, "There was an error processing punch in action.");
-    }
-  }
-  
-  
-  async function handlePunchOut(chatId, shiftType) {
-    try {
-      const punchOutTime = new Date();
-      const dayName = punchOutTime.toLocaleDateString("en-US", { weekday: "long" });
-  
-      bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:");
-      bot.once("message", async (msg) => {
-        try {
-          const employeeID = msg.text.trim();
-          const userData = await findUser({ employeeID });
-          const attendanceData = await attendanceListData({ employeeID });
-          if (!userData) {
-            bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
-            return;
-          }
-          else if (attendanceData[0] && attendanceData[0].loggedIn) {
-            const timeDuration = shiftType === "full" ? 9 * 60 * 60 * 1000 : 4.5 * 60 * 60 * 1000; // Calculate time duration based on shift type
-            if (punchOutTime.getTime() <= attendanceData[0].totalHrs + timeDuration) {
-              const remainingTime = Math.ceil((attendanceData[0].totalHrs + timeDuration - punchOutTime.getTime()) / 60000);
-              const remaininghours = Math.floor(remainingTime / 60);
-              const remainingMin = remainingTime - (remaininghours * 60);
-              bot.sendMessage(chatId, `⏰ Can not Punch out before time. The time remaining for checkout is: ${remaininghours} hours and ${remainingMin} minutes`);
-            } else {
-              await updateAttendance({ _id: attendanceData[0]._id }, {
-                chatId: chatId,
-                punchOut: punchOutTime,
-                date: new Date(),
-                day: dayName,
-                employeeID: employeeID,
-                loggedIn: false
-              });
-              console.log("Attendance updated successfully.");
-              bot.sendMessage(chatId, "✔️✔️ Attendance Punch Out Successfully. Thank you !! ✔️✔️");
-            }
-          } else {
-            bot.sendMessage(chatId, "Attendance already marked by user");
-          }
-        } catch (error) {
-          console.error("Error processing attendance:", error);
-          bot.sendMessage(chatId, "There was an error processing your request.");
-        }
-      });
-    } catch (error) {
-      console.error("Error handling punch out:", error);
-      bot.sendMessage(chatId, "There was an error processing punch out action.");
-    }
-  }
+export class botController { }
 
-  async function handleBreakIn(chatId) {
-    try {
-      const breakInTime = new Date().getTime();
-      const dayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
-  
-      bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:");
-      bot.once("message", async (msg) => {
-        try {
-          const employeeID = msg.text.trim();
-          const userData = await findUser({ employeeID });
-          let breakData = await breakServices.breakList({ employeeID, createdAt: { $gte: new Date().setHours(0, 0, 0, 0) } });
-  
-          if (!userData) {
-            bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
-            return;
-          } else if (breakData.length > 0 && breakData[0].onBreak) {
-            bot.sendMessage(chatId, "User is Already on break");
-            return;
-          }
-  
-          if (breakData.length > 0) {
-            // Update existing break record
-            let a = await breakServices.updateBreaks(
-              { _id: breakData[0]._id },
-              {
-                chatId: chatId,
-                breakIn: breakInTime,
-                onBreak: true,
-              }
-            );
-            console.log("a", a);
-            bot.sendMessage(chatId, "✔️✔️ BreakIn has been Updated Successfully. Thank you !! ✔️✔️");
-          } else {
-            // Create new break record
-            await breakServices.createBreak({
-              chatId: chatId,
-              breakIn: breakInTime,
-              date: new Date(),
-              day: dayName,
-              employeeID: employeeID,
-              onBreak: true,
-            });
-            bot.sendMessage(chatId, "✔️✔️ Break Subscribed Successfully. Thank you !! ✔️✔️");
-          }
-        } catch (error) {
-          console.error("Error processing Break:", error);
-          bot.sendMessage(chatId, "There was an error processing your request.");
-        }
-      });
-    } catch (error) {
-      console.error("Error handling Break in:", error);
-      bot.sendMessage(chatId, "There was an error processing BreakIn action.");
-    }
-  }
-  
-  async function handleBreakOut(chatId) {
-    const breakOutTime = new Date().getTime();
+async function handlePunchIn(chatId, shiftType) {
+  try {
+    const punchInTime = new Date();
+    const options = {
+      timeZone: 'Asia/Dubai',
+      timeZoneName: 'short',
+      hour12: false,
+    };
+    const formattedPunchInTime = punchInTime.toLocaleString('en-US', options);
+
     bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:");
-  
-    // Listen for user's response
     bot.once("message", async (msg) => {
-      const employeeID = msg.text.trim();
-  
       try {
-        // Find user data
+        const employeeID = msg.text.trim();
         const userData = await findUser({ employeeID });
+        const attendanceData = await attendanceListData({ employeeID });
+
         if (!userData) {
           bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
           return;
         }
-  
-        // Find the latest break data for the user on the same date
-        let breakData = await breakServices.breakList({
-          employeeID,
-          createdAt: {
-            $gte: new Date().setHours(0, 0, 0, 0), // Start of today
-            $lt: new Date().setHours(23, 59, 59, 999), // End of today
-          },
-          onBreak: true, // Ensure we only find breaks that are still active
-        });
-  
-        if (!breakData || breakData.length === 0) {
-          bot.sendMessage(chatId, "No active break found for this user.");
+
+        if (attendanceData[0] && attendanceData[0].loggedIn) {
+          // Check if the previous punch-in was within the last 10 hours
+          const lastPunchInTime = new Date(attendanceData[0].punchIn);
+          const hoursDiff = (punchInTime.getTime() - lastPunchInTime.getTime()) / (1000 * 60 * 60);
+
+          if (hoursDiff <= 10) {
+            console.log("Attendance already marked.");
+            bot.sendMessage(chatId, "✔️✔️ Attendance Already Marked. Thank you !! ✔️✔️");
+          } else {
+            await createAttendance({
+              chatId: chatId,
+              punchIn: punchInTime,
+              employeeID: employeeID,
+              loggedIn: true,
+              totalHrs: punchInTime.getTime(),
+              isHalfDay: punchInTime.getHours() > 9 || (punchInTime.getHours() === 9 && punchInTime.getMinutes() > 15)
+            });
+
+            console.log("Attendance recorded successfully.");
+            bot.sendMessage(chatId, "✅✅ Attendance Punch In Successfully. Thank you !! ✅✅");
+          }
+        } else {
+          await createAttendance({
+            chatId: chatId,
+            punchIn: punchInTime,
+            employeeID: employeeID,
+            loggedIn: true,
+            totalHrs: punchInTime.getTime(),
+            isHalfDay: punchInTime.getHours() > 9 || (punchInTime.getHours() === 9 && punchInTime.getMinutes() > 15)
+          });
+
+          console.log("Attendance recorded successfully.");
+          bot.sendMessage(chatId, "✅✅ Attendance Punch In Successfully. Thank you !! ✅✅");
+        }
+      } catch (error) {
+        console.error("Error processing attendance:", error);
+        bot.sendMessage(chatId, "⚠️ There was an error processing your request. Please try again. ⚠️");
+      }
+    });
+  } catch (error) {
+    console.error("Error handling punch in:", error);
+    bot.sendMessage(chatId, "⚠️ There was an error processing punch in action. Please try again. ⚠️");
+  }
+}
+
+async function handlePunchOut(chatId, shiftType) {
+  try {
+    const punchOutTime = new Date();
+    const options = {
+      timeZone: 'Asia/Dubai',
+      timeZoneName: 'short',
+      hour12: false,
+    };
+    const formattedPunchOutTime = punchOutTime.toLocaleString('en-US', options);
+
+    bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:");
+    bot.once("message", async (msg) => {
+      try {
+        const employeeID = msg.text.trim();
+        const userData = await findUser({ employeeID });
+        const attendanceData = await attendanceListData({ employeeID });
+        console.log(punchOutTime.getTime(), attendanceData[0]);
+
+        if (!userData) {
+          bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
           return;
         }
-  
-        // Calculate break duration in seconds
-        const breakInTime = breakData[0].breakIn;
-        const timeDurationSeconds = Math.floor((breakOutTime - breakInTime) / 1000);
-        let totalTimeAcquired = (parseFloat(breakData[0].totalBreakTime) + (timeDurationSeconds / 60)).toFixed(3);
-        let extraTimeAcquire = 0; // Changed to number instead of string
-        if (parseFloat(totalTimeAcquired) > 45) { // Converted to parseFloat for comparison
-           extraTimeAcquire = parseFloat(totalTimeAcquired) - 45; // Converted to parseFloat for subtraction
-        }               
-        // Update existing break record
-        await breakServices.updateBreaks({
-          _id: breakData[0]._id,
-        }, {
-          chatId: chatId,
-          breakOut: breakOutTime,
-          totalBreakTime: totalTimeAcquired,
-          onBreak: false,
-          isDangerZone: timeDurationSeconds > (45 * 60), // Check if time extension is needed
-          extraTime: extraTimeAcquire // Convert extra time to minutes
+
+        if (attendanceData[0] && attendanceData[0].loggedIn) {
+          const timeDuration = shiftType === "full" ? 9 * 60 * 60 * 1000 : 4.5 * 60 * 60 * 1000;
+          if (punchOutTime.getTime() <= attendanceData[0].totalHrs + timeDuration) {
+            const remainingTime = Math.ceil((attendanceData[0].totalHrs + timeDuration - punchOutTime.getTime()) / 60000);
+            const remainingHours = Math.floor(remainingTime / 60);
+            const remainingMin = (remainingTime % 60).toString().padStart(2, '0');
+            bot.sendMessage(chatId, `⏰ Cannot Punch out before time. ⏰\n\n The time remaining for checkout is: ${remainingHours} hours and ${remainingMin} minutes ⏰`);
+          } else {
+            await updateAttendance({ _id: attendanceData[0]._id }, {
+              punchOut: punchOutTime,
+              employeeID: employeeID,
+              loggedIn: false,
+              totalHrs: punchOutTime.getTime() - attendanceData[0].totalHrs
+            });
+            console.log("Attendance updated successfully.");
+            bot.sendMessage(chatId, "✅✅ Attendance Punch Out Successfully. Thank you !! ✅✅");
+          }
+        }
+        else {
+          bot.sendMessage(chatId, "❌ Attendance not marked. Please mark attendance before punch out. ❌");
+        }
+      } catch (error) {
+        console.error("Error processing attendance:", error);
+        bot.sendMessage(chatId, "⚠️ There was an error processing your request. Please try again. ⚠️");
+      }
+    });
+  } catch (error) {
+    console.error("Error handling punch out:", error);
+    bot.sendMessage(chatId, "⚠️ There was an error processing punch out action. Please try again. ⚠️");
+  }
+}
+
+async function handleBreakIn(chatId) {
+  try {
+    const breakInTime = new Date().getTime();
+    bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:");
+
+    bot.once("message", async (msg) => {
+      try {
+        const employeeID = msg.text.trim();
+        const userData = await findUser({ employeeID });
+        let breakData = await breakServices.breakList({
+          employeeID,
+          createdAt: { $gte: new Date().setHours(0, 0, 0, 0) }
         });
 
-        const updatedBreakData = await breakServices.findBreak({ _id: breakData[0]._id });
+        if (!userData) {
+          bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
+          return;
+        } else if (breakData.length > 0 && breakData[0].onBreak) {
+          bot.sendMessage(chatId, "User is Already on break");
+          return;
+        }
 
-        bot.sendMessage(chatId, `✔️✔️ Break Out Updated Successfully, Total Break taken is : ${(parseFloat(breakData[0].totalBreakTime) + (timeDurationSeconds / 60)).toFixed(3)} minutes. Thank you !! ✔️✔️`);
-  
+        if (breakData.length > 0) {
+          await breakServices.updateBreaks(
+            { _id: breakData[0]._id },
+            {
+              $push: {
+                breaks: {
+                  breakIn: breakInTime,
+                }
+              },
+              onBreak: true
+            }
+          );
+          bot.sendMessage(chatId, "✔️✔️ BreakIn has been Updated Successfully. Thank you !! ✔️✔️");
+        } else {
+          // Create new break record
+          await breakServices.createBreak({
+            chatId: chatId,
+            breaks: [{
+              breakIn: breakInTime,
+              onBreak: true
+            }],
+            employeeID: employeeID,
+            onBreak: true
+          });
+          bot.sendMessage(chatId, "✔️✔️ Break Subscribed Successfully. Thank you !! ✔️✔️");
+        }
       } catch (error) {
         console.error("Error processing Break:", error);
         bot.sendMessage(chatId, "There was an error processing your request.");
       }
     });
+  } catch (error) {
+    console.error("Error handling Break in:", error);
+    bot.sendMessage(chatId, "There was an error processing BreakIn action.");
   }
-  
+}
+
+
+async function handleBreakOut(chatId) {
+  const breakOutTime = new Date().getTime();
+  bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:");
+  bot.once("message", async (msg) => {
+    const employeeID = msg.text.trim();
+    try {
+      const userData = await findUser({ employeeID });
+      if (!userData) {
+        bot.sendMessage(chatId, "❌ Oops, Please Register Yourself. ❌");
+        return;
+      }
+      let breakData = await breakServices.breakList({
+        employeeID,
+        createdAt: {
+          $gte: new Date().setHours(0, 0, 0, 0),
+          $lt: new Date().setHours(23, 59, 59, 999),
+        },
+        onBreak: true,
+      });
+      if (!breakData || breakData.length === 0) {
+        bot.sendMessage(chatId, "No active break found for this user.");
+        return;
+      }
+      const latestBreakIn = breakData[0].breaks[breakData[0].breaks.length - 1];
+      if (latestBreakIn.breakOut !== "0") {
+        bot.sendMessage(chatId, "Break out already recorded for the latest break in.");
+        return;
+      }
+      const breakInTime = latestBreakIn.breakIn;
+      const timeDurationSeconds = Math.floor((breakOutTime - breakInTime) / 1000);
+      let totalBreakTime = parseFloat(breakData[0].totalBreakTime) + (timeDurationSeconds / 60);
+      let extraTime = 0;
+      if (totalBreakTime > 45) {
+        extraTime = totalBreakTime - 45;
+      }
+      await breakServices.updateBreaks(
+        { _id: breakData[0]._id, "breaks._id": latestBreakIn._id },
+        {
+          chatId: chatId,
+          "breaks.$.breakOut": breakOutTime,
+          "breaks.$.breakTime": timeDurationSeconds,
+          totalBreakTime: totalBreakTime.toFixed(3),
+          onBreak: false,
+          isDangerZone: timeDurationSeconds > (45 * 60),
+
+          extraTime: extraTime.toFixed(2)
+        }
+      )
+      bot.sendMessage(chatId, `✔️✔️ Break Out Updated Successfully, Total Break taken is: ${totalBreakTime.toFixed(3)} minutes. Thank you !! ✔️✔️`);
+    } catch (error) {
+      console.error("Error processing Break:", error);
+      bot.sendMessage(chatId, "There was an error processing your request.");
+    }
+  });
+}
+
+
 export default new botController();
 //---------------------------------------------------------------END APIS ---------------------------------------------------------------//
 const myNum = 0;
@@ -287,7 +286,6 @@ bot.on("callback_query", async (query) => {
 
   if (data === "registerHere") {
     try {
-      // Send a message to get employee ID
       bot
         .sendMessage(chatId, "⌨️ ⌨️ Please enter the Employee ID:", {
           parse_mode: "Markdown",
@@ -297,21 +295,14 @@ bot.on("callback_query", async (query) => {
           },
         })
         .then(() => {
-          // Wait for the message with employee ID
           bot.once("message", async (msg) => {
             try {
-              const employeeID = msg.text.trim(); // Get the employee ID
-              
-              // Check if employeeID exists in the database
+              const employeeID = msg.text.trim();
               const existingUser = await employeeIdServices.findEmployeeId({ employeeId: employeeID });
-              
               if (!existingUser || existingUser === null) {
-                // Employee ID does not exist, inform user and exit
                 await bot.sendMessage(chatId, "⭕ Employee ID not found. Registration canceled.");
                 return;
               }
-              
-              // Send a message to get the name
               await bot.sendMessage(chatId, "⌨️ ⌨️ Please enter the Name:", {
                 parse_mode: "Markdown",
                 reply_markup: {
@@ -321,36 +312,28 @@ bot.on("callback_query", async (query) => {
                   ],
                 },
               });
-  
-              // Wait for the message with the name
               bot.once("message", async (msg) => {
                 try {
-                  const name = msg.text.trim(); // Get the name
-                   if (!/^[a-zA-Z\s]+$/.test(name)) {
+                  const name = msg.text.trim();
+                  if (!/^[a-zA-Z\s]+$/.test(name)) {
                     bot.sendMessage(chatId, "❌ Invalid name format. Please enter a valid name without symbols or numbers.");
                     return;
                   }
-              
-                  // Check if user is already registered
-                  const userData = await findUser({ chatId: chatId});
+                  const userData = await findUser({ chatId: chatId });
                   if (!userData) {
-                    // Create a new user document
                     const newUser = await createUser({
                       chatId: chatId,
                       employeeID: employeeID,
                       name: name,
                     });
-                    // Save the new user document
                     console.log("User created successfully:", newUser);
-                    // Inform the user about successful registration
                     bot.sendMessage(chatId, "👌 Registration successful! 👌");
                   } else {
-                    // Inform the user that registration is not possible
                     bot.sendMessage(chatId, "⭕ User Already Registered! ⭕");
                   }
                 } catch (error) {
                   console.log(error);
-                   bot.sendMessage(
+                  bot.sendMessage(
                     chatId,
                     "⚠️ There was an error processing your request. ⚠️"
                   );
@@ -367,10 +350,10 @@ bot.on("callback_query", async (query) => {
         });
     } catch (error) {
       console.log(error);
-      bot.sendMessage(chatId, "There was an error processing your request.");
+      bot.sendMessage(chatId, "⚠️ There was an error processing your request. ⚠️");
     }
   }
-  
+
   if (data === "mayIHelpYou") {
     try {
       bot.sendMessage(chatId, "⌨️ Please Enter your Employee ID:").then(() => {
@@ -405,7 +388,7 @@ bot.on("callback_query", async (query) => {
           } catch (error) {
             bot.sendMessage(
               chatId,
-              "There was an error processing your request."
+              "⚠️ There was an error processing your request. ⚠️"
             );
           }
         });
@@ -424,9 +407,9 @@ bot.on("callback_query", async (query) => {
       const keyboard = {
         inline_keyboard: options,
       };
-  
+
       bot.sendMessage(chatId, "Click Here For Working Shift.", { reply_markup: keyboard });
-  
+
       bot.once("callback_query", async (query) => {
         try {
           const userData = await findUser({ chatId });
@@ -434,7 +417,7 @@ bot.on("callback_query", async (query) => {
             bot.sendMessage(chatId, "Invalid User Found");
             return;
           }
-  
+
           if (query.data === "Full_Day" || query.data === "Half_Day") {
             const shiftType = query.data === "Full_Day" ? "full" : "half";
             const punchOptions = [
@@ -445,7 +428,7 @@ bot.on("callback_query", async (query) => {
               inline_keyboard: punchOptions,
             };
             bot.sendMessage(chatId, "Click Here For Mark Attendance.", { reply_markup: punchKeyboard });
-  
+
             bot.once("callback_query", async (query) => {
               try {
                 if (query.data.startsWith("punch_in_")) {
@@ -464,7 +447,7 @@ bot.on("callback_query", async (query) => {
           bot.sendMessage(chatId, "There was an error processing your working shift.");
         }
       });
-  
+
     } catch (error) {
       console.error("Error sending message:", error);
       bot.sendMessage(chatId, "⚠️ There was an error processing your request.");
@@ -480,9 +463,9 @@ bot.on("callback_query", async (query) => {
       const keyboard = {
         inline_keyboard: options,
       };
-  
+
       bot.sendMessage(chatId, "Click Here For Break status update.", { reply_markup: keyboard });
-  
+
       bot.once("callback_query", async (query) => {
         try {
           const userData = await findUser({ chatId });
@@ -490,7 +473,7 @@ bot.on("callback_query", async (query) => {
             bot.sendMessage(chatId, "Invalid User Found");
             return;
           }
-  
+
           if (query.data === "on_break" || query.data === "off_break") {
             const action = query.data === "on_break" ? "on" : "off";
             if (action === "on") {
@@ -504,7 +487,7 @@ bot.on("callback_query", async (query) => {
           bot.sendMessage(chatId, "There was an error processing your Break update.");
         }
       });
-  
+
     } catch (error) {
       console.error("Error sending message:", error);
       bot.sendMessage(chatId, "⚠️ There was an error processing your request.", { parse_mode: "HTML" });
@@ -546,9 +529,9 @@ function startToast(chatId) {
     inline_keyboard: options,
   };
 
-  const image = "https://ibb.co/41hKCFZ"; // Replace with the URL of your image
+  const image = "https://ibb.co/41hKCFZ";
   const caption = `
-🌎📣 <b>Welcome to AttendNRest Bot</b> 🌎📣
+🌎📣 Welcome to AttendNRest Bot 🌎📣
 
 Hello there! I am your AttendNRest Telegram bot. Below are the options you can choose from:
 

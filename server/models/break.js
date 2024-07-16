@@ -9,15 +9,17 @@ const options = {
 };
 const breakModel = new Schema(
   {
-    chatId: { type: String },
-    day: {type: String},
-    breakIn: { type: String },
-    breakOut: { type: String, default: 0 },
+    chatId: { type: String },    
     totalBreakTime: { type: String, default: 0 },
     extraTime: {type: String},
     isDangerZone: {type: Boolean},
     timeSaved: {type: String},
     employeeID: { type: String },
+    breaks: [{
+      breakIn: { type: String },
+      breakOut: { type: String, default: 0 },
+      breakTime: { type: String, default: 0 },
+    }],
     onBreak: { type: Boolean, default: false },
     userType: { type: String, default: userType.USER },
     status: { type: String, default: status.ACTIVE },
