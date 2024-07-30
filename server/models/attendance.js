@@ -15,8 +15,6 @@ const attendanceModel = new Schema(
     punchOut: { type: String },
     employeeID: {type: String},
     totalHrs: { type: Number, default: 0 },
-    // date: { type: String },
-    // day: {type: String},
     isHalfDay: {type: Boolean, default: false},
     loggedIn: {type: Boolean, default: false},
     userType: { type: String, default: userType.USER },

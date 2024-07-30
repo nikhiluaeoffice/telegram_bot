@@ -2,13 +2,7 @@ import Config from "config";
 const TelegramBot = require("node-telegram-bot-api");
 const telegramConfig = Config.get("telegramConfig");
 const bot = new TelegramBot(telegramConfig.telegramBotKey, { polling: true });
-const axios = require("axios");
-// const contractAddress = Config.get("repoTokenAddress");
-import status from "../../../../enums/status";
-let isAlert = false;
-// require("./cron/notification");
 
-var activeListeners = {};
 //****************************** Import services here ******************************************/
 
 import { userServices } from "../../services/user";

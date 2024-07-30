@@ -36,6 +36,11 @@ mongoose.connect(mongoURI, {
     .router(Routes)
     .configureSwagger(Config.get("swaggerDefinition"))
     .handleError();
+    
+process.stdout.write("\x1b]2; Telegram Bot \x1b\x5c");
+
+
+
 
   // Start the server
   server.listen(Config.get("port"), () => {
@@ -46,6 +51,9 @@ mongoose.connect(mongoURI, {
   console.error("Error connecting to MongoDB:", error);
   process.exit(1); // Exit with error if MongoDB connection fails
 });
+
+
+
 
 
 // ************ config file in case of localhost ******************//
